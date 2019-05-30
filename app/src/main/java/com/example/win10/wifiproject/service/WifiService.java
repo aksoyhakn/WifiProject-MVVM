@@ -1,5 +1,6 @@
 package com.example.win10.wifiproject.service;
 
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,24 +8,42 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 
 import com.example.win10.wifiproject.R;
-import com.example.win10.wifiproject.helper.Common;
 import com.example.win10.wifiproject.model.WifiModel;
+import com.example.win10.wifiproject.view.adapter.WifiAdapter;
 import com.example.win10.wifiproject.viewModel.WifiViewModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WifiService extends BroadcastReceiver {
 
-    List<ScanResult> results;
-    WifiManager wifiManager;
+    private WifiAdapter adapter;
+    private List<WifiViewModel> wifiViewModels = new ArrayList<>();
+    private List<ScanResult> results;
 
+    public void setAdapter(WifiAdapter adapter) {
+        this.adapter = adapter;
+    }
+
+    public List<WifiViewModel> getWifiList() {
+        return wifiViewModels;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         results = wifiManager.getScanResults();
-        wifiManager.startScan();
+
+        wifiViewModels.clear();
+
+        if (!results.equals(wifiManager.startScan())) {
+            displayWifiList();
+        }
+
+    }
+
+    private void displayWifiList() {
 
         for (ScanResult scanResult : results) {
 
@@ -33,31 +52,27 @@ public class WifiService extends BroadcastReceiver {
             if (level <= 0 && level >= -50) {
 
                 //Best signal
-                Common.WİFİ_LİST.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.excellent)));
+                wifiViewModels.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.excellent)));
 
             } else if (level < -50 && level >= -70) {
 
                 //Good signal
-                Common.WİFİ_LİST.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.good)));
+                wifiViewModels.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.good)));
 
 
             } else if (level < -70 && level >= -80) {
 
                 //Low signal
-                Common.WİFİ_LİST.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.fair)));
+                wifiViewModels.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.fair)));
 
             } else if (level < -80 && level >= -100) {
 
                 //Very weak signal
-                Common.WİFİ_LİST.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.weak)));
+                wifiViewModels.add(new WifiViewModel(new WifiModel(scanResult.SSID, scanResult.BSSID, R.drawable.weak)));
 
-            } else {
-                // no signals
             }
 
-
-            Common.WİFİ_ADAPTER.notifyDataSetChanged();
-
+            adapter.notifyDataSetChanged();
         }
     }
 }
